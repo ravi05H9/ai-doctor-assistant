@@ -10,11 +10,11 @@ import {
   GetReportResponse,
 } from "@workspace/api-zod";
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY must be set.");
+function getOpenAI() {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY is not set.");
+  return new OpenAI({ apiKey: key });
 }
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const router: IRouter = Router();
 
@@ -78,7 +78,7 @@ router.post("/reports", async (req, res): Promise<void> => {
   };
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o",
       max_tokens: 2000,
       messages: [
