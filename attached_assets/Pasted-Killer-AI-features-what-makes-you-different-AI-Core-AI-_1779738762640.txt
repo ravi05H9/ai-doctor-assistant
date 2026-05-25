@@ -1,0 +1,114 @@
+Killer AI features — what makes you different
+
+AI Core
+AI Pre-Check before booking
+
+User describes symptoms → AI suggests specialty, urgency level, and online vs offline consultation before any booking form appears.
+
+AI Core
+AI doctor matchmaking
+
+Match by budget, language, disease type, success rate, and real-time availability — not just a sorted list.
+
+Viral Feature
+AI report analyzer
+
+Upload blood report, X-ray, or prescription → AI explains abnormal values in plain Telugu/Hindi/English. Huge for India.
+
+Viral Feature
+Voice appointment booking
+
+Speak in Telugu or Hindi → AI understands and books. No forms. Massive advantage in tier-2 and tier-3 cities.
+
+Signature Feature
+Digital health twin
+
+AI builds a personal health profile from history, habits, sleep, diet, and reports — then predicts future risks before symptoms appear.
+
+AI Core
+Ambient AI for doctors
+
+Listens during consultation, auto-creates notes, prescription, follow-up instructions. Saves doctors 30+ minutes per day.
+
+India-First
+Family health dashboard
+
+One account manages parents, children, spouse — with shared prescriptions, vaccine tracker, medicine reminders, and emergency contacts.
+
+Safety
+Emergency smart routing
+
+AI detects chest pain, stroke, breathing issues → instantly shows nearest hospitals, ambulance integration, emergency contacts.
+
+2026 Trend
+Wearable integration
+
+Connect Apple Watch, Fitbit, BP monitor, glucose monitor. Doctor sees live heart rate, sleep, sugar, and oxygen trends.
+
+Retention
+AI follow-up assistant
+
+After consultation: medicine reminders, symptom check-ins, recovery tracking, auto-books follow-up. Keeps users engaged long-term.
+
+Viral Feature
+AI health score
+
+Daily score from sleep, steps, reports, water, stress. Gamified with badges and streaks — drives daily app opens.
+
+Mental Health
+Emotion + stress detection
+
+Voice AI detects anxiety and depression risk → suggests therapist or meditation. Mental health is mainstream in 2026 healthcare.
+
+Build roadmap — 3 phases
+
+Phase 1 — Ship fast
+
+Login & profiles
+Doctor booking
+Video consultation
+AI symptom checker
+Prescriptions
+Payment gateway
+
+Phase 2 — Grow
+
+Voice AI booking
+Report analyzer
+Medicine reminders
+Family dashboard
+AI matchmaking
+Chat with doctor
+
+Phase 3 — Dominate
+
+Digital health twin
+Wearable sync
+Emergency routing
+Ambient doctor AI
+Predictive alerts
+Clinic SaaS
+
+Tech stack
+
+React / Next.js
+Tailwind CSS
+Node.js + Express
+FastAPI (AI layer)
+PostgreSQL
+MongoDB
+OpenAI API
+Whisper (voice)
+LangChain agents
+OCR for reports
+WebRTC (video)
+Socket.io
+Razorpay
+Monetization
+
+Commission per consultation
+Premium AI features subscription
+Clinic SaaS plan
+Lab & pharmacy partnerships
+Family health plan (₹299/mo)
+White-label for hospitals
