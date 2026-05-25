@@ -12,7 +12,7 @@ import {
   ListOpenaiConversationsResponse,
   GetOpenaiConversationResponse,
   ListOpenaiMessagesResponse,
-  OpenaiConversation,
+  ListOpenaiConversationsResponseItem,
 } from "@workspace/api-zod";
 
 if (!process.env.OPENAI_API_KEY) {
@@ -45,7 +45,7 @@ router.post("/openai/conversations", async (req, res): Promise<void> => {
     .values({ title: parsed.data.title })
     .returning();
 
-  res.status(201).json(OpenaiConversation.parse(conv));
+  res.status(201).json(ListOpenaiConversationsResponseItem.parse(conv));
 });
 
 router.get("/openai/conversations/:id", async (req, res): Promise<void> => {
