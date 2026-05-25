@@ -17,7 +17,7 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 type Message = { role: "user" | "assistant"; content: string; streaming?: boolean };
 
 function ChatView({ convId, onBack }: { convId: number; onBack: () => void }) {
-  const { data: history = [], isLoading } = useListOpenaiMessages({ id: convId });
+  const { data: history = [], isLoading } = useListOpenaiMessages(convId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
