@@ -64,14 +64,15 @@ function ChatView({ convId, onBack }: { convId: number; onBack: () => void }) {
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const data = line.slice(6).trim();
-            if (data === "[DONE]") break;
             try {
-              const { delta } = JSON.parse(data);
-              if (delta) {
+              const parsed = JSON.parse(data);
+              if (parsed.done) break;
+              const chunk = parsed.content ?? parsed.delta ?? "";
+              if (chunk) {
                 setMessages((prev) => {
                   const updated = [...prev];
                   const last = updated[updated.length - 1];
-                  updated[updated.length - 1] = { ...last, content: last.content + delta };
+                  updated[updated.length - 1] = { ...last, content: last.content + chunk };
                   return updated;
                 });
               }
