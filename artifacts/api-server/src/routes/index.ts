@@ -6,6 +6,7 @@ import medicationsRouter from "./medications";
 import recoveryRouter from "./recovery";
 import dashboardRouter from "./dashboard";
 import openaiRouter from "./openai";
+import reportsRouter from "./reports";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(medicationsRouter);
 router.use(recoveryRouter);
 router.use(dashboardRouter);
 router.use(openaiRouter);
+router.use(reportsRouter);
 
 export default router;

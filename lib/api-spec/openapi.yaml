@@ -21,6 +21,8 @@ tags:
     description: Summary and analytics
   - name: openai
     description: OpenAI AI chat, image, and audio operations
+  - name: reports
+    description: AI-powered medical report analysis
 paths:
   /healthz:
     get:
@@ -338,6 +340,82 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
+
+  /reports:
+    get:
+      operationId: listReports
+      tags: [reports]
+      summary: List all analyzed reports
+      responses:
+        "200":
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportAnalysis"
+    post:
+      operationId: analyzeReport
+      tags: [reports]
+      summary: Upload and analyze a medical report image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportAnalysisInput"
+      responses:
+        "201":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportAnalysis"
+
+  /reports/{id}:
+    get:
+      operationId: getReport
+      tags: [reports]
+      summary: Get a report analysis by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportAnalysis"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: deleteReport
+      tags: [reports]
+      summary: Delete a report analysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /openai/conversations:
     get:
@@ -724,6 +802,75 @@ components:
         - recoveryStreak
         - totalAppointments
         - recentRecoveryEntries
+
+    ReportFinding:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+        status:
+          type: string
+          enum: [normal, abnormal, borderline]
+        explanation:
+          type: string
+      required:
+        - label
+        - value
+        - status
+        - explanation
+
+    ReportAnalysisInput:
+      type: object
+      properties:
+        imageBase64:
+          type: string
+          description: Base64-encoded image data (with or without data URL prefix)
+        reportType:
+          type: string
+          enum: [blood_report, xray, prescription, other]
+        fileName:
+          type: string
+        language:
+          type: string
+          enum: [English, Hindi, Telugu]
+      required:
+        - imageBase64
+        - reportType
+
+    ReportAnalysis:
+      type: object
+      properties:
+        id:
+          type: integer
+        reportType:
+          type: string
+        fileName:
+          type: ["string", "null"]
+        summary:
+          type: string
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportFinding"
+        recommendations:
+          type: array
+          items:
+            type: string
+        language:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - reportType
+        - summary
+        - findings
+        - recommendations
+        - language
+        - createdAt
 
     OpenaiConversation:
       type: object

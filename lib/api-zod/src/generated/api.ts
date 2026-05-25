@@ -287,6 +287,70 @@ export const GetDashboardSummaryResponse = zod.object({
 
 
 /**
+ * @summary List all analyzed reports
+ */
+export const ListReportsResponseItem = zod.object({
+  "id": zod.number(),
+  "reportType": zod.string(),
+  "fileName": zod.string().nullish(),
+  "summary": zod.string(),
+  "findings": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string(),
+  "status": zod.enum(['normal', 'abnormal', 'borderline']),
+  "explanation": zod.string()
+})),
+  "recommendations": zod.array(zod.string()),
+  "language": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListReportsResponse = zod.array(ListReportsResponseItem)
+
+
+/**
+ * @summary Upload and analyze a medical report image
+ */
+export const AnalyzeReportBody = zod.object({
+  "imageBase64": zod.string().describe('Base64-encoded image data (with or without data URL prefix)'),
+  "reportType": zod.enum(['blood_report', 'xray', 'prescription', 'other']),
+  "fileName": zod.string().optional(),
+  "language": zod.enum(['English', 'Hindi', 'Telugu']).optional()
+})
+
+
+/**
+ * @summary Get a report analysis by ID
+ */
+export const GetReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetReportResponse = zod.object({
+  "id": zod.number(),
+  "reportType": zod.string(),
+  "fileName": zod.string().nullish(),
+  "summary": zod.string(),
+  "findings": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string(),
+  "status": zod.enum(['normal', 'abnormal', 'borderline']),
+  "explanation": zod.string()
+})),
+  "recommendations": zod.array(zod.string()),
+  "language": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a report analysis
+ */
+export const DeleteReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List all conversations
  */
 export const ListOpenaiConversationsResponseItem = zod.object({

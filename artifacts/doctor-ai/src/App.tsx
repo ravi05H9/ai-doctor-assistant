@@ -6,6 +6,12 @@ import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 
 import Dashboard from "@/pages/dashboard";
+import AiChat from "@/pages/ai-chat";
+import Doctors from "@/pages/doctors";
+import Appointments from "@/pages/appointments";
+import Medications from "@/pages/medications";
+import Recovery from "@/pages/recovery";
+import Reports from "@/pages/reports";
 
 const queryClient = new QueryClient();
 
@@ -14,6 +20,12 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/ai-chat" component={AiChat} />
+        <Route path="/doctors" component={Doctors} />
+        <Route path="/appointments" component={Appointments} />
+        <Route path="/medications" component={Medications} />
+        <Route path="/recovery" component={Recovery} />
+        <Route path="/reports" component={Reports} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

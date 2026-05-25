@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Activity, Calendar, HeartPulse, LayoutDashboard, MessageCircle, Pill, Stethoscope, Menu } from "lucide-react";
+import { Activity, Calendar, HeartPulse, LayoutDashboard, MessageCircle, Pill, Stethoscope, Menu, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/appointments", label: "Appointments", icon: Calendar },
   { href: "/medications", label: "Medications", icon: Pill },
   { href: "/recovery", label: "Recovery Log", icon: Activity },
+  { href: "/reports", label: "Report Analyzer", icon: FileText },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

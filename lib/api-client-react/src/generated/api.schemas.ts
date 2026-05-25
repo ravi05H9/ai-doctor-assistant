@@ -143,6 +143,61 @@ export interface DashboardSummary {
   nextAppointment?: Appointment;
 }
 
+export type ReportFindingStatus = typeof ReportFindingStatus[keyof typeof ReportFindingStatus];
+
+
+export const ReportFindingStatus = {
+  normal: 'normal',
+  abnormal: 'abnormal',
+  borderline: 'borderline',
+} as const;
+
+export interface ReportFinding {
+  label: string;
+  value: string;
+  status: ReportFindingStatus;
+  explanation: string;
+}
+
+export type ReportAnalysisInputReportType = typeof ReportAnalysisInputReportType[keyof typeof ReportAnalysisInputReportType];
+
+
+export const ReportAnalysisInputReportType = {
+  blood_report: 'blood_report',
+  xray: 'xray',
+  prescription: 'prescription',
+  other: 'other',
+} as const;
+
+export type ReportAnalysisInputLanguage = typeof ReportAnalysisInputLanguage[keyof typeof ReportAnalysisInputLanguage];
+
+
+export const ReportAnalysisInputLanguage = {
+  English: 'English',
+  Hindi: 'Hindi',
+  Telugu: 'Telugu',
+} as const;
+
+export interface ReportAnalysisInput {
+  /** Base64-encoded image data (with or without data URL prefix) */
+  imageBase64: string;
+  reportType: ReportAnalysisInputReportType;
+  fileName?: string;
+  language?: ReportAnalysisInputLanguage;
+}
+
+export interface ReportAnalysis {
+  id: number;
+  reportType: string;
+  /** @nullable */
+  fileName?: string | null;
+  summary: string;
+  findings: ReportFinding[];
+  recommendations: string[];
+  language: string;
+  createdAt: string;
+}
+
 export interface OpenaiConversation {
   id: number;
   title: string;
