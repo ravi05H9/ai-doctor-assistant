@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, conversations, messages } from "@workspace/db";
 import { eq, asc } from "drizzle-orm";
-import OpenAI from "openai";
+import { openai } from "@workspace/integrations-openai-ai-server";
 import {
   CreateOpenaiConversationBody,
   GetOpenaiConversationParams,
@@ -14,12 +14,6 @@ import {
   ListOpenaiMessagesResponse,
   ListOpenaiConversationsResponseItem,
 } from "@workspace/api-zod";
-
-function getOpenAI() {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("OPENAI_API_KEY is not set.");
-  return new OpenAI({ apiKey: key });
-}
 
 const SYSTEM_PROMPT = `You are a compassionate personal AI doctor assistant. When users describe symptoms, provide thoughtful health guidance, suggest which type of medical specialist they should see, and encourage them to book an appointment. Be warm, clear, and helpful — never alarmist. Always remind users to consult a real doctor for diagnosis. Keep responses concise and easy to read.`;
 
@@ -158,9 +152,9 @@ router.post("/openai/conversations/:id/messages", async (req, res): Promise<void
 
   let fullResponse = "";
 
-  const stream = await getOpenAI().chat.completions.create({
-    model: "gpt-4o-mini",
-    max_completion_tokens: 1024,
+  const stream = await openai.chat.completions.create({
+    model: "gpt-5-mini",
+    max_completion_tokens: 8192,
     messages: [{ role: "system", content: SYSTEM_PROMPT }, ...chatMessages],
     stream: true,
   });

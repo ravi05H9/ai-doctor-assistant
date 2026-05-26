@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, reportAnalysesTable } from "@workspace/db";
 import { desc, eq } from "drizzle-orm";
-import OpenAI from "openai";
+import { openai } from "@workspace/integrations-openai-ai-server";
 import {
   AnalyzeReportBody,
   GetReportParams,
@@ -9,12 +9,6 @@ import {
   ListReportsResponse,
   GetReportResponse,
 } from "@workspace/api-zod";
-
-function getOpenAI() {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("OPENAI_API_KEY is not set.");
-  return new OpenAI({ apiKey: key });
-}
 
 const router: IRouter = Router();
 
@@ -78,9 +72,9 @@ router.post("/reports", async (req, res): Promise<void> => {
   };
 
   try {
-    const response = await getOpenAI().chat.completions.create({
-      model: "gpt-4o",
-      max_tokens: 2000,
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.4",
+      max_completion_tokens: 2000,
       messages: [
         {
           role: "user",
