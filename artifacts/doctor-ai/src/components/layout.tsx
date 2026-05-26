@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Activity, Calendar, HeartPulse, LayoutDashboard, MessageCircle, Pill, Stethoscope, Menu, FileText } from "lucide-react";
+import { Activity, Calendar, HeartPulse, LayoutDashboard, MessageCircle, Pill, Stethoscope, Menu, FileText, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useClerk, useUser } from "@clerk/react";
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/ai-chat", label: "AI Chat", icon: MessageCircle },
   { href: "/doctors", label: "Doctors", icon: Stethoscope },
   { href: "/appointments", label: "Appointments", icon: Calendar },
@@ -17,6 +20,12 @@ const NAV_ITEMS = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { signOut } = useClerk();
+  const { user } = useUser();
+
+  function handleSignOut() {
+    signOut({ redirectUrl: basePath || "/" });
+  }
 
   const NavContent = () => (
     <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border w-64 p-4">
@@ -26,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
       <nav className="flex-1 space-y-1">
         {NAV_ITEMS.map((item) => {
-          const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+          const isActive = location === item.href || location.startsWith(item.href + "/");
           return (
             <Link key={item.href} href={item.href}>
               <div
@@ -44,6 +53,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
+
+      {/* User section */}
+      <div className="mt-4 pt-4 border-t border-sidebar-border">
+        <div className="flex items-center gap-3 px-3 py-2 mb-2">
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+            ) : (
+              <User className="h-4 w-4 text-primary" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-sidebar-foreground truncate">
+              {user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "User"}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.emailAddresses?.[0]?.emailAddress}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-sidebar-accent/50 hover:text-destructive transition-colors cursor-pointer"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </button>
+      </div>
     </div>
   );
 
