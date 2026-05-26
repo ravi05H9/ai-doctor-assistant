@@ -1,0 +1,168 @@
+Fix the AI Chatbot and Medical Report Analyzer in my existing app. The issues are:
+
+## Problem 1: AI Chatbot not working
+- The chat sends messages but gets no response or errors
+- Fix the /api/chat route in server.js
+- Use this exact working code for the chat API route:
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { messages } = req.body;
+    
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      system: "You are a helpful medical assistant. Answer health and medical questions clearly in simple language. Always remind users to consult a real doctor for serious health concerns.",
+      messages: messages
+    });
+    
+    res.json({ reply: response.content[0].text });
+  } catch (error) {
+    console.error('Chat error:', error);
+    res.status(500).json({ error: 'Chat failed: ' + error.message });
+  }
+});
+
+---
+
+## Problem 2: Report Analyzer not working for blood tests, X-rays, scans, prescriptions, and other medical files
+
+- File uploads are not being analyzed correctly
+- Fix the /api/analyze route to handle all file types properly
+- Use this exact working code:
+
+const multer = require('multer');
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit
+});
+
+app.post('/api/analyze', upload.single('file'), async (req, res) => {
+  try {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const base64Data = file.buffer.toString('base64');
+    const mimeType = file.mimetype;
+    
+    let messageContent = [];
+
+    // Handle images (X-ray, scan, photo of report)
+    if (mimeType.startsWith('image/')) {
+      messageContent = [
+        {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: mimeType,
+            data: base64Data
+          }
+        },
+        {
+          type: "text",
+          text: `You are a medical report analyzer. Analyze this medical image carefully.
+          
+          Please provide:
+          1. REPORT TYPE: What kind of report/image is this? (X-ray, scan, blood test, prescription, etc.)
+          2. KEY FINDINGS: What do you see in this report?
+          3. ABNORMAL VALUES: Are there any concerning values or findings? (highlight clearly)
+          4. NORMAL VALUES: What appears normal?
+          5. SUMMARY: Brief overall summary
+          6. RECOMMENDATIONS: What should the patient be aware of?
+          
+          Format your response clearly with these headings.
+          End with: "⚠️ DISCLAIMER: This is an AI analysis for informational purposes only. Please consult a qualified doctor for medical advice and diagnosis."`
+        }
+      ];
+    }
+    // Handle PDF files
+    else if (mimeType === 'application/pdf') {
+      messageContent = [
+        {
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: base64Data
+          }
+        },
+        {
+          type: "text",
+          text: `You are a medical report analyzer. Analyze this medical document carefully.
+          
+          Please provide:
+          1. REPORT TYPE: What kind of report is this? (blood test, prescription, lab report, scan report, etc.)
+          2. KEY FINDINGS: What are the main findings or values in this report?
+          3. ABNORMAL VALUES: Are there any values outside normal range? (highlight clearly)
+          4. NORMAL VALUES: What appears within normal range?
+          5. SUMMARY: Brief overall summary
+          6. RECOMMENDATIONS: What should the patient be aware of?
+          
+          Format your response clearly with these headings.
+          End with: "⚠️ DISCLAIMER: This is an AI analysis for informational purposes only. Please consult a qualified doctor for medical advice and diagnosis."`
+        }
+      ];
+    }
+    // Handle text files
+    else {
+      const textContent = file.buffer.toString('utf-8');
+      messageContent = [
+        {
+          type: "text",
+          text: `You are a medical report analyzer. Analyze this medical report text:
+          
+          ${textContent}
+          
+          Please provide:
+          1. REPORT TYPE: What kind of report is this?
+          2. KEY FINDINGS: What are the main findings?
+          3. ABNORMAL VALUES: Any abnormal values or concerns?
+          4. NORMAL VALUES: What is normal?
+          5. SUMMARY: Brief overall summary
+          6. RECOMMENDATIONS: What should the patient know?
+          
+          End with: "⚠️ DISCLAIMER: This is an AI analysis for informational purposes only. Please consult a qualified doctor for medical advice and diagnosis."`
+        }
+      ];
+    }
+
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2048,
+      messages: [{ role: "user", content: messageContent }]
+    });
+
+    res.json({ analysis: response.content[0].text });
+
+  } catch (error) {
+    console.error('Analysis error:', error);
+    res.status(500).json({ error: 'Analysis failed: ' + error.message });
+  }
+});
+
+---
+
+## Also make sure:
+1. In package.json, these dependencies exist:
+   - "@anthropic-ai/sdk": "latest"
+   - "multer": "latest"
+   - "express": "latest"
+   
+   Run: npm install @anthropic-ai/sdk multer express
+
+2. At the top of server.js make sure this line exists:
+   require('dotenv').config();
+   
+3. ANTHROPIC_API_KEY is set in Replit Secrets (not hardcoded)
+
+4. The frontend fetch calls match these route names:
+   - Chat uses: POST /api/chat  with body { messages: [...] }
+   - Analyzer uses: POST /api/analyze  with FormData containing 'file'
+
+Fix only these broken parts and do not change anything else in the app.
