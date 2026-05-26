@@ -427,3 +427,18 @@ export const SendOpenaiMessageBody = zod.object({
 })
 
 
+/**
+ * @summary Transcribe spoken audio to text
+ */
+export const transcribeAudioBodyFormatDefault = `webm`;
+
+export const TranscribeAudioBody = zod.object({
+  "audioBase64": zod.string().describe('Base64-encoded audio data (WebM, WAV, or MP3)'),
+  "format": zod.enum(['webm', 'wav', 'mp3']).default(transcribeAudioBodyFormatDefault)
+})
+
+export const TranscribeAudioResponse = zod.object({
+  "text": zod.string()
+})
+
+

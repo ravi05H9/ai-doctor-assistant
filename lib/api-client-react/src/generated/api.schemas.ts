@@ -231,6 +231,25 @@ export interface OpenaiError {
   error: string;
 }
 
+export type TranscriptionInputFormat = typeof TranscriptionInputFormat[keyof typeof TranscriptionInputFormat];
+
+
+export const TranscriptionInputFormat = {
+  webm: 'webm',
+  wav: 'wav',
+  mp3: 'mp3',
+} as const;
+
+export interface TranscriptionInput {
+  /** Base64-encoded audio data (WebM, WAV, or MP3) */
+  audioBase64: string;
+  format?: TranscriptionInputFormat;
+}
+
+export interface TranscriptionResponse {
+  text: string;
+}
+
 export type ListDoctorsParams = {
 specialty?: string;
 available?: boolean;

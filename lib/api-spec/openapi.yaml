@@ -535,6 +535,25 @@ paths:
           content:
             text/event-stream: {}
 
+  /openai/transcriptions:
+    post:
+      operationId: transcribeAudio
+      tags: [openai]
+      summary: Transcribe spoken audio to text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TranscriptionInput"
+      responses:
+        "200":
+          description: Transcribed text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranscriptionResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -951,3 +970,24 @@ components:
           type: string
       required:
         - error
+
+    TranscriptionInput:
+      type: object
+      properties:
+        audioBase64:
+          type: string
+          description: Base64-encoded audio data (WebM, WAV, or MP3)
+        format:
+          type: string
+          enum: [webm, wav, mp3]
+          default: webm
+      required:
+        - audioBase64
+
+    TranscriptionResponse:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text

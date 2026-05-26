@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, conversations, messages } from "@workspace/db";
 import { eq, asc } from "drizzle-orm";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { speechToText } from "@workspace/integrations-openai-ai-server/audio";
 import {
   CreateOpenaiConversationBody,
   GetOpenaiConversationParams,
@@ -176,6 +177,25 @@ router.post("/openai/conversations/:id/messages", async (req, res): Promise<void
 
   res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
   res.end();
+});
+
+router.post("/openai/transcriptions", async (req, res): Promise<void> => {
+  const { audioBase64, format = "webm" } = req.body as { audioBase64: string; format?: string };
+
+  if (!audioBase64) {
+    res.status(400).json({ error: "audioBase64 is required" });
+    return;
+  }
+
+  try {
+    const base64Data = audioBase64.includes(",") ? audioBase64.split(",")[1] : audioBase64;
+    const audioBuffer = Buffer.from(base64Data, "base64");
+    const validFormat = ["webm", "wav", "mp3"].includes(format) ? (format as "webm" | "wav" | "mp3") : "webm";
+    const text = await speechToText(audioBuffer, validFormat);
+    res.json({ text });
+  } catch {
+    res.status(502).json({ error: "Transcription failed. Please try again." });
+  }
 });
 
 export default router;

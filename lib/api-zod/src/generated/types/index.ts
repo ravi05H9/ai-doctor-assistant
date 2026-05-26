@@ -33,3 +33,6 @@ export * from './reportAnalysisInputLanguage';
 export * from './reportAnalysisInputReportType';
 export * from './reportFinding';
 export * from './reportFindingStatus';
+export * from './transcriptionInput';
+export * from './transcriptionInputFormat';
+export * from './transcriptionResponse';

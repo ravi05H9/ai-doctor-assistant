@@ -1,20 +1,130 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   useListOpenaiConversations,
   useCreateOpenaiConversation,
   useDeleteOpenaiConversation,
   useListOpenaiMessages,
+  useTranscribeAudio,
 } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { MessageCircle, Plus, Trash2, Send, Loader2, Bot, User } from "lucide-react";
+import { MessageCircle, Plus, Trash2, Send, Loader2, Bot, User, Mic, MicOff, Square } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 type Message = { role: "user" | "assistant"; content: string; streaming?: boolean };
+
+type RecordingState = "idle" | "recording" | "transcribing";
+
+function VoiceButton({
+  onTranscript,
+  disabled,
+}: {
+  onTranscript: (text: string) => void;
+  disabled?: boolean;
+}) {
+  const [state, setState] = useState<RecordingState>("idle");
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const { mutateAsync: transcribeAudio } = useTranscribeAudio();
+  const { toast } = useToast();
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : "audio/mp4";
+
+      const recorder = new MediaRecorder(stream, { mimeType });
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const format = mimeType.includes("mp4") ? "mp3" : "webm";
+
+        setState("transcribing");
+        try {
+          const reader = new FileReader();
+          const base64 = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+
+          const result = await transcribeAudio({ data: { audioBase64: base64, format } });
+          if (result.text.trim()) {
+            onTranscript(result.text.trim());
+          } else {
+            toast({ title: "No speech detected", description: "Please speak clearly and try again." });
+          }
+        } catch {
+          toast({ title: "Transcription failed", description: "Could not understand audio. Please try again.", variant: "destructive" });
+        } finally {
+          setState("idle");
+        }
+      };
+
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setState("recording");
+    } catch {
+      toast({ title: "Microphone access denied", description: "Please allow microphone access in your browser.", variant: "destructive" });
+    }
+  }, [transcribeAudio, onTranscript, toast]);
+
+  const stopRecording = useCallback(() => {
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+  }, []);
+
+  if (state === "transcribing") {
+    return (
+      <Button type="button" variant="outline" size="icon" disabled className="shrink-0">
+        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+      </Button>
+    );
+  }
+
+  if (state === "recording") {
+    return (
+      <Button
+        type="button"
+        variant="destructive"
+        size="icon"
+        onClick={stopRecording}
+        className="shrink-0 animate-pulse"
+        title="Stop recording"
+      >
+        <Square className="h-4 w-4 fill-current" />
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      onClick={startRecording}
+      disabled={disabled}
+      className="shrink-0"
+      title="Speak your symptoms"
+    >
+      <Mic className="h-4 w-4" />
+    </Button>
+  );
+}
 
 function ChatView({ convId, onBack }: { convId: number; onBack: () => void }) {
   const { data: history = [], isLoading } = useListOpenaiMessages(convId);
@@ -34,18 +144,18 @@ function ChatView({ convId, onBack }: { convId: number; onBack: () => void }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function sendMessage() {
-    const text = input.trim();
-    if (!text || streaming) return;
+  async function sendMessage(text?: string) {
+    const content = (text ?? input).trim();
+    if (!content || streaming) return;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setMessages((prev) => [...prev, { role: "user", content }]);
     setStreaming(true);
 
     try {
       const resp = await fetch(`${BASE}/api/openai/conversations/${convId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: text }),
+        body: JSON.stringify({ content }),
       });
 
       if (!resp.ok || !resp.body) throw new Error("Stream failed");
@@ -107,7 +217,7 @@ function ChatView({ convId, onBack }: { convId: number; onBack: () => void }) {
           <div className="text-center py-16 text-muted-foreground">
             <Bot className="h-10 w-10 mx-auto mb-3 opacity-30" />
             <p className="font-medium">Describe your symptoms</p>
-            <p className="text-sm mt-1">I'll help you understand what might be happening and which specialist to see.</p>
+            <p className="text-sm mt-1">Type or tap the mic to speak — I'll help identify what's happening and which specialist to see.</p>
           </div>
         )}
         {messages.map((m, i) => (
@@ -134,18 +244,31 @@ function ChatView({ convId, onBack }: { convId: number; onBack: () => void }) {
         ))}
         <div ref={bottomRef} />
       </div>
-      <div className="flex gap-2">
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Describe your symptoms…"
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-          disabled={streaming}
-          className="flex-1"
-        />
-        <Button onClick={sendMessage} disabled={streaming || !input.trim()}>
-          {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
+
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Describe your symptoms…"
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            disabled={streaming}
+            className="flex-1"
+          />
+          <VoiceButton
+            onTranscript={(text) => {
+              setInput(text);
+            }}
+            disabled={streaming}
+          />
+          <Button onClick={() => sendMessage()} disabled={streaming || !input.trim()}>
+            {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground text-center">
+          <Mic className="h-3 w-3 inline mr-1 opacity-60" />
+          Tap the mic to speak your symptoms — they'll appear in the box above
+        </p>
       </div>
     </div>
   );
@@ -185,7 +308,7 @@ export default function AiChat() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">AI Health Chat</h1>
-          <p className="text-muted-foreground mt-1">Describe your symptoms and get AI-powered health guidance.</p>
+          <p className="text-muted-foreground mt-1">Describe your symptoms by typing or speaking — get AI-powered health guidance.</p>
         </div>
         <Button onClick={startNew}>
           <Plus className="h-4 w-4 mr-2" /> New Chat
