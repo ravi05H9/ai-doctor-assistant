@@ -38,7 +38,17 @@ function AppRoutes() {
               <SignIn routing="path" path="/sign-in" />
             </div>
           )} />
+          <Route path="/sign-in/sso-callback" component={() => (
+            <div className="min-h-screen flex items-center justify-center">
+              <SignIn routing="path" path="/sign-in" />
+            </div>
+          )} />
           <Route path="/sign-up" component={() => (
+            <div className="min-h-screen flex items-center justify-center">
+              <SignUp routing="path" path="/sign-up" />
+            </div>
+          )} />
+          <Route path="/sign-up/sso-callback" component={() => (
             <div className="min-h-screen flex items-center justify-center">
               <SignUp routing="path" path="/sign-up" />
             </div>
